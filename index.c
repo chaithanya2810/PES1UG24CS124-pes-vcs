@@ -153,9 +153,10 @@ int index_load(Index *index) {
     while (index->count < MAX_INDEX_ENTRIES) {
         IndexEntry *e = &index->entries[index->count];
 
-        if (fscanf(fp, "%o %64s %ld %u %s\n", 
-           &e->mode, hash_hex, &e->mtime_sec, &e->size, e->path) == 5)        {
-            break;
+        // Replace the fscanf logic here:
+        if (fscanf(fp, "%o %64s %ld %u %511s\n",
+                   &e->mode, hash_hex, &e->mtime_sec, &e->size, e->path) != 5) {
+            break; // Break ONLY if we reach the end of the file or an error
         }
 
         hex_to_hash(hash_hex, &e->hash);
@@ -255,16 +256,17 @@ int index_add(Index *index, const char *path) {
     }
     free(data);
 
+
+    // Inside index_add...
     IndexEntry *e = index_find(index, path);
-    if (!e) {
+    
+    if (e == NULL) {
         if (index->count >= MAX_INDEX_ENTRIES) {
-            fprintf(stderr, "Error: Index is full\n");
             return -1;
         }
         e = &index->entries[index->count++];
-        
-        // FIX: Use 512 (or MAX_PATH_LEN if defined as 512) to match index.h
-        strncpy(e->path, path, 512 - 1); 
+        // Use the safe 512 size
+        strncpy(e->path, path, 511);
         e->path[511] = '\0';
     }
 
