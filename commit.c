@@ -193,47 +193,37 @@ int head_update(const ObjectID *new_commit) {
 //   - head_update       : moves the branch pointer to your new commit
 //
 // Returns 0 on success, -1 on error.
+
 int commit_create(const char *message, ObjectID *commit_id_out) {
     Commit commit;
     memset(&commit, 0, sizeof(Commit));
 
-    // 1. Build the tree from the index and get its hash
-    if (tree_from_index(&commit.tree) != 0) {
-        fprintf(stderr, "Error: Failed to create tree from index\n");
-        return -1;
-    }
+    // 1. Get the tree hash
+    if (tree_from_index(&commit.tree) != 0) return -1;
 
-    // 2. Get the parent commit hash from HEAD
-    // If head_read fails, it's just the first commit (no parent)
+    // 2. Parent handling - head_read is provided, so use it
     if (head_read(&commit.parent) == 0) {
         commit.has_parent = 1;
     } else {
-        commit.has_parent = 0;
+        commit.has_parent = 0; // First commit case
     }
 
-    // 3. Set Author and Timestamp
-    const char *author = pes_author();
-    memset(commit.message, 0, sizeof(commit.message));
-    strncpy(commit.message, message, sizeof(commit.message) - 1);
+    // 3. Metadata
+    strncpy(commit.author, pes_author(), sizeof(commit.author) - 1);
     commit.timestamp = (uint64_t)time(NULL);
-
-    // 4. Set Message
     strncpy(commit.message, message, sizeof(commit.message) - 1);
 
-    // 5. Serialize the commit struct to text
-    void *buffer = NULL;
+    // 4. Serialize and Write
+    void *buf = NULL;
     size_t len = 0;
-    if (commit_serialize(&commit, &buffer, &len) != 0) {
-        return -1;
-    }
+    if (commit_serialize(&commit, &buf, &len) != 0) return -1;
+    
+    int rc = object_write(OBJ_COMMIT, buf, len, commit_id_out);
+    free(buf);
 
-    // 6. Write the commit object to the store
-    if (object_write(OBJ_COMMIT, buffer, len, commit_id_out) != 0) {
-        free(buffer);
-        return -1;
-    }
-    free(buffer);
+    if (rc != 0) return -1;
 
-    // 7. Update HEAD to point to this new commit
+    // 5. Update the reference
     return head_update(commit_id_out);
 }
+    
