@@ -119,7 +119,38 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     return 0;
     }
 
+    char path[512];
+    object_path(id_out, path, sizeof(path));
+
+// create directory
+    char dir[512];
+    snprintf(dir, sizeof(dir), "%s", path);
+    char *slash = strrchr(dir, '/');
+    if (slash) {
+      *slash = '\0';
+      mkdir(dir, 0755);
+    }
+
+    // temp file
+    char temp_path[512];
+    snprintf(temp_path, sizeof(temp_path), "%s.tmp", path);
+
+    int fd = open(temp_path, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    if (fd < 0) {
+      free(full);
+      return -1;
+    }
+
+    write(fd, full, total_len);
+    fsync(fd);
+    close(fd);
+
+    rename(temp_path, path);
+
+    free(full);
     return 0;
+
+ 
 }
 
 
