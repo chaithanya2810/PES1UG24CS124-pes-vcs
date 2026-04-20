@@ -222,7 +222,18 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
     else if (strcmp(type_str, "commit") == 0) *type_out = OBJ_COMMIT;
     else {
       free(buffer);
+      return -1;   }
+
+    *data_out = malloc(data_size);
+    if (!*data_out) {
+      free(buffer);
       return -1;
-}
+    }
+
+    memcpy(*data_out, buffer + header_len, data_size);
+    *len_out = data_size;
+
+    free(buffer);
+    return 0;
 
 }
