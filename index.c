@@ -231,8 +231,23 @@ int index_add(Index *index, const char *path) {
     long size = ftell(fp);
     rewind(fp);
 
-    void *data = malloc(size);
-    fread(data, 1, size, fp);
+    void *data = NULL;
+
+    if (size > 0) {
+      data = malloc(size);
+      if (!data) {
+          fclose(fp);
+          return -1;
+      }
+
+      if (fread(data, 1, size, fp) != size) {
+          fclose(fp);
+          free(data);
+          return -1;
+      }
+    }
+
+
     fclose(fp);
 
     ObjectID id;
@@ -242,15 +257,36 @@ int index_add(Index *index, const char *path) {
     }
 
     struct stat st;
-    stat(path, &st);
+
+    if (stat(path, &st) != 0) {
+      perror("stat failed");
+      free(data);
+      return -1;
+    }
 
     IndexEntry *e = index_find(index, path);
 
+    // 3. Find existing entry or create a new one
+    IndexEntry *e = index_find(index, path);
     if (!e) {
+        // SAFETY: Check if we have space in the fixed-size array
+        if (index->count >= MAX_INDEX_ENTRIES) {
+            fprintf(stderr, "Error: Index staging area is full\n");
+            free(data);
+            return -1;
+        }
+        // Take the next available slot and increment the total count
         e = &index->entries[index->count++];
+        
+        // Only set the path for NEW entries to avoid overflow
+        strncpy(e->path, path, MAX_PATH_LEN - 1);
+        e->path[MAX_PATH_LEN - 1] = '\0';
     }
 
-    e->mode = st.st_mode;
+    e->mode = (st.st_mode & 0100000) ? 
+              ((st.st_mode & 0111) ? 0100755 : 0100644) 
+              : 0100644; 
+
     e->hash = id;
     e->mtime_sec = st.st_mtime;
     e->size = st.st_size;
