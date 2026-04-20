@@ -51,6 +51,11 @@
 ### Screenshot 4C: Reference Chain
 ![Ref Chain](./screenshots/4C.jpeg)
 
+### Screenshot of Final --Full integration test (make test-integration)
+(./screenshots/F1.jpeg)
+(./screenshots/F2.jpeg)
+
+
 ---
 
 ##  Phase 5: Branching and Checkout Analysis
