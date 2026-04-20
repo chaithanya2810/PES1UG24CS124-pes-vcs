@@ -149,12 +149,11 @@ int index_load(Index *index) {
     while (index->count < MAX_INDEX_ENTRIES) {
         IndexEntry *e = &index->entries[index->count];
 
-        if (fscanf(fp, "%o %64s %ld %ld %s\n",
-                   &e->mode,
-                   hash_hex,
-                   &e->mtime_sec,
-                   &e->size,
-                   e->path) != 5) {
+        fprintf(fp, "%o %s %ld %u %s\n", 
+        sorted.entries[i].mode, hash_hex, 
+        sorted.entries[i].mtime_sec, sorted.entries[i].size, 
+        sorted.entries[i].path);
+       {
             break;
         }
 
