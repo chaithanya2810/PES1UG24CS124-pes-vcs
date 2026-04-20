@@ -197,5 +197,20 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
     fread(buffer, 1, size, fp);
     fclose(fp);    
 
+    ObjectID check;
+    compute_hash(buffer, size, &check);
+
+    if (memcmp(check.hash, id->hash, HASH_SIZE) != 0) {
+      free(buffer);
+      return -1; }
+
+    char *null_pos = memchr(buffer, '\0', size);
+    if (!null_pos) {
+      free(buffer);
+      return -1;
+    }
+
+    size_t header_len = null_pos - buffer + 1;
+    
 
 }
