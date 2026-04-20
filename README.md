@@ -1,12 +1,12 @@
 # PES-VCS Lab Report: Version Control System Implementation
 
-**Student Name:** Chaithanya  
+**Student Name:** Chaithanya .N
 **SRN:** PES1UG24CS124  
 **Date:** April 2026
 
 ---
 
-## 📸 Phase 1: Object Store
+##  Phase 1: Object Store
 *Implemented sharded SHA-256 content-addressable storage.*
 
 ### Screenshot 1A: Object Tests
@@ -17,7 +17,7 @@
 
 ---
 
-## 📸 Phase 2: Trees
+##  Phase 2: Trees
 *Implemented tree serialization and hierarchical directory mapping.*
 
 ### Screenshot 2A: Tree Tests
@@ -28,7 +28,7 @@
 
 ---
 
-## 📸 Phase 3: Staging Area (Index)
+##  Phase 3: Staging Area (Index)
 *Implemented the index for staging changes and resolved stack-memory issues.*
 
 ### Screenshot 3A: Add and Status Sequence
@@ -39,7 +39,7 @@
 
 ---
 
-## 📸 Phase 4: Commits and History
+##  Phase 4: Commits and History
 *Implemented atomic HEAD updates and commit chaining.*
 
 ### Screenshot 4A: Three-Commit History
@@ -53,6 +53,7 @@
 
 ### Screenshot of Final --Full integration test (make test-integration)
 ![final](./screenshots/F1.jpeg)
+
 ![final](./screenshots/F2.jpeg)
 
 
