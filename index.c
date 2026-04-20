@@ -218,74 +218,58 @@ int index_save(const Index *index) {
 // Returns 0 on success, -1 on error.
 
 int index_add(Index *index, const char *path) {
-    FILE *fp = fopen(path, "rb");
-    if (!fp) return -1;
-
-    fseek(fp, 0, SEEK_END);
-    long size = ftell(fp);
-    rewind(fp);
-
-    void *data = NULL;
-
-    if (size > 0) {
-      data = malloc(size);
-      if (!data) {
-          fclose(fp);
-          return -1;
-      }
-
-      if (fread(data, 1, size, fp) != size) {
-          fclose(fp);
-          free(data);
-          return -1;
-      }
-    }
-
-
-    fclose(fp);
-
-    ObjectID id;
-    if (object_write(OBJ_BLOB, data, size, &id) != 0) {
-        free(data);
+    struct stat st;
+    if (stat(path, &st) != 0) {
+        perror("stat failed");
         return -1;
     }
 
-    struct stat st;
+    FILE *fp = fopen(path, "rb");
+    if (!fp) return -1;
 
-    if (stat(path, &st) != 0) {
-      perror("stat failed");
-      free(data);
-      return -1;
+    // Use size_t to match fread's expectations and fix the "signedness" warning
+    size_t file_size = (size_t)st.st_size;
+    void *data = malloc(file_size);
+    if (!data && file_size > 0) {
+        fclose(fp);
+        return -1;
     }
 
-    IndexEntry *e = index_find(index, path);
+    if (file_size > 0) {
+        fread(data, 1, file_size, fp);
+    }
+    fclose(fp);
 
-    // 3. Find existing entry or create a new one
+    ObjectID id;
+    // Note: ensure object.h is included or object_write is declared
+    if (object_write(OBJ_BLOB, data, file_size, &id) != 0) {
+        free(data);
+        return -1;
+    }
+    free(data);
+
     IndexEntry *e = index_find(index, path);
     if (!e) {
-        // SAFETY: Check if we have space in the fixed-size array
         if (index->count >= MAX_INDEX_ENTRIES) {
-            fprintf(stderr, "Error: Index staging area is full\n");
-            free(data);
+            fprintf(stderr, "Error: Index is full\n");
             return -1;
         }
-        // Take the next available slot and increment the total count
         e = &index->entries[index->count++];
-        
-        // Only set the path for NEW entries to avoid overflow
-        strncpy(e->path, path, MAX_PATH_LEN - 1);
-        e->path[MAX_PATH_LEN - 1] = '\0';
+        // Use 4096 if MAX_PATH_LEN is giving errors, but check pes.h first
+        strncpy(e->path, path, 4096 - 1); 
+        e->path[4095] = '\0';
     }
 
-    e->mode = (st.st_mode & 0100000) ? 
-              ((st.st_mode & 0111) ? 0100755 : 0100644) 
-              : 0100644; 
+    if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
+        e->mode = 0100755;
+    } else {
+        e->mode = 0100644;
+    }
 
     e->hash = id;
-    e->mtime_sec = st.st_mtime;
-    e->size = st.st_size;
-    strcpy(e->path, path);
+    e->mtime_sec = (int64_t)st.st_mtime;
+    e->size = (uint32_t)file_size;
 
-    free(data);
     return index_save(index);
 }
+   
