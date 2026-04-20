@@ -231,21 +231,24 @@ int index_add(Index *index, const char *path) {
     FILE *fp = fopen(path, "rb");
     if (!fp) return -1;
 
-    // Use size_t to match fread's expectations and fix the "signedness" warning
     size_t file_size = (size_t)st.st_size;
-    void *data = malloc(file_size);
+    void *data = malloc(file_size + 1); // +1 just for safety
     if (!data && file_size > 0) {
         fclose(fp);
         return -1;
     }
 
     if (file_size > 0) {
-        fread(data, 1, file_size, fp);
+        if (fread(data, 1, file_size, fp) != file_size) {
+            fprintf(stderr, "Error reading file\n");
+            free(data);
+            fclose(fp);
+            return -1;
+        }
     }
     fclose(fp);
 
     ObjectID id;
-    // Note: ensure object.h is included or object_write is declared
     if (object_write(OBJ_BLOB, data, file_size, &id) != 0) {
         free(data);
         return -1;
@@ -259,9 +262,10 @@ int index_add(Index *index, const char *path) {
             return -1;
         }
         e = &index->entries[index->count++];
-        // Use 4096 if MAX_PATH_LEN is giving errors, but check pes.h first
-        strncpy(e->path, path, 4096 - 1); 
-        e->path[4095] = '\0';
+        
+        // FIX: Use 512 (or MAX_PATH_LEN if defined as 512) to match index.h
+        strncpy(e->path, path, 512 - 1); 
+        e->path[511] = '\0';
     }
 
     if (S_ISREG(st.st_mode) && (st.st_mode & S_IXUSR)) {
@@ -276,4 +280,3 @@ int index_add(Index *index, const char *path) {
 
     return index_save(index);
 }
-   
