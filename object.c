@@ -211,6 +211,18 @@ int object_read(const ObjectID *id, ObjectType *type_out, void **data_out, size_
     }
 
     size_t header_len = null_pos - buffer + 1;
-    
+
+    char type_str[10];
+    size_t data_size;
+
+    sscanf(buffer, "%s %zu", type_str, &data_size);
+
+    if (strcmp(type_str, "blob") == 0) *type_out = OBJ_BLOB;
+    else if (strcmp(type_str, "tree") == 0) *type_out = OBJ_TREE;
+    else if (strcmp(type_str, "commit") == 0) *type_out = OBJ_COMMIT;
+    else {
+      free(buffer);
+      return -1;
+}
 
 }
