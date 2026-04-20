@@ -190,7 +190,8 @@ int index_save(const Index *index) {
     if (!fp) return -1;
 
     // make a copy to sort
-    Index sorted = *index;
+    static Index sorted;
+    sorted = *index;
     qsort(sorted.entries, sorted.count, sizeof(IndexEntry), compare_index_entries);
 
     char hash_hex[HASH_HEX_SIZE + 1];
