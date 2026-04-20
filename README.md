@@ -1,6 +1,6 @@
 # PES-VCS Lab Report: Version Control System Implementation
 
-**Student Name:** Chaithanya .N
+**Name:** Chaithanya.N
 **SRN:** PES1UG24CS124  
 **Date:** April 2026
 
