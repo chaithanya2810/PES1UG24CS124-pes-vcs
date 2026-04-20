@@ -112,6 +112,7 @@ int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out
     memcpy(full, header, header_len);
     memcpy(full + header_len, data, len);
 
+    compute_hash(full, total_len, id_out);
 
     return 0;
 }
