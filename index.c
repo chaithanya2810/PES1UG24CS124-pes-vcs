@@ -149,11 +149,8 @@ int index_load(Index *index) {
     while (index->count < MAX_INDEX_ENTRIES) {
         IndexEntry *e = &index->entries[index->count];
 
-        fprintf(fp, "%o %s %ld %u %s\n", 
-        sorted.entries[i].mode, hash_hex, 
-        sorted.entries[i].mtime_sec, sorted.entries[i].size, 
-        sorted.entries[i].path);
-       {
+        if (fscanf(fp, "%o %64s %ld %u %s\n", 
+           &e->mode, hash_hex, &e->mtime_sec, &e->size, e->path) == 5)        {
             break;
         }
 
@@ -196,12 +193,10 @@ int index_save(const Index *index) {
     for (int i = 0; i < sorted.count; i++) {
         hash_to_hex(&sorted.entries[i].hash, hash_hex);
 
-        fprintf(fp, "%o %s %ld %ld %s\n",
-                sorted.entries[i].mode,
-                hash_hex,
-                sorted.entries[i].mtime_sec,
-                sorted.entries[i].size,
-                sorted.entries[i].path);
+        fprintf(fp, "%o %s %ld %u %s\n", 
+        sorted.entries[i].mode, hash_hex, 
+        sorted.entries[i].mtime_sec, sorted.entries[i].size, 
+        sorted.entries[i].path);
     }
 
     fflush(fp);
