@@ -213,7 +213,8 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
 
     // 3. Set Author and Timestamp
     const char *author = pes_author();
-    strncpy(commit.author, author, sizeof(commit.author) - 1);
+    memset(commit.message, 0, sizeof(commit.message));
+    strncpy(commit.message, message, sizeof(commit.message) - 1);
     commit.timestamp = (uint64_t)time(NULL);
 
     // 4. Set Message
