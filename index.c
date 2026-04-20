@@ -17,6 +17,10 @@
 
 #include "pes.h"
 #include "index.h"
+#include "tree.h"  // Add this if not present
+// If object_write is still not found, add this line:
+int object_write(ObjectType type, const void *data, size_t len, ObjectID *id_out);
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
