@@ -52,8 +52,9 @@
 ![Ref Chain](./screenshots/4C.jpeg)
 
 ### Screenshot of Final --Full integration test (make test-integration)
-(./screenshots/F1.jpeg)
-(./screenshots/F2.jpeg)
+![final](./screenshots/F1.jpeg)
+![final](./screenshots/F2.jpeg)
+
 
 
 ---
