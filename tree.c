@@ -143,6 +143,20 @@ int tree_from_index(ObjectID *id_out) {
       return -1;
     }
 
+    Tree tree;
+    tree.count = 0;
+
+    for (int i = 0; i < index.count; i++) {
+    // skip paths with '/'
+      if (strchr(index.entries[i].path, '/')) continue;
+
+      TreeEntry *entry = &tree.entries[tree.count++];
+
+      entry->mode = index.entries[i].mode;
+      strcpy(entry->name, index.entries[i].path);
+      entry->hash = index.entries[i].hash;
+    }
+
     (void)id_out;
     return -1;
 }
