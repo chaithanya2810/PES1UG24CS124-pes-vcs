@@ -198,32 +198,35 @@ int commit_create(const char *message, ObjectID *commit_id_out) {
     Commit commit;
     memset(&commit, 0, sizeof(Commit));
 
-    // 1. Get the tree hash
+    // 1. Tree
     if (tree_from_index(&commit.tree) != 0) return -1;
 
-    // 2. Parent handling - head_read is provided, so use it
+    // 2. Parent
     if (head_read(&commit.parent) == 0) {
         commit.has_parent = 1;
     } else {
-        commit.has_parent = 0; // First commit case
+        commit.has_parent = 0;
     }
 
     // 3. Metadata
-    strncpy(commit.author, pes_author(), sizeof(commit.author) - 1);
+    snprintf(commit.author, sizeof(commit.author), "%s", pes_author());
     commit.timestamp = (uint64_t)time(NULL);
-    strncpy(commit.message, message, sizeof(commit.message) - 1);
+    snprintf(commit.message, sizeof(commit.message), "%s", message);
 
-    // 4. Serialize and Write
-    void *buf = NULL;
+    // 4. Serialize using the PROVIDED function
+    void *buffer = NULL;
     size_t len = 0;
-    if (commit_serialize(&commit, &buf, &len) != 0) return -1;
+    if (commit_serialize(&commit, &buffer, &len) != 0) return -1;
+
+    // 5. Write and Update
+    if (object_write(OBJ_COMMIT, buffer, len, commit_id_out) != 0) {
+        free(buffer);
+        return -1;
+    }
     
-    int rc = object_write(OBJ_COMMIT, buf, len, commit_id_out);
-    free(buf);
+    // Debug: This will show you exactly what is being stored
+    // printf("DEBUG: Storing commit buffer:\n%s\n", (char*)buffer);
 
-    if (rc != 0) return -1;
-
-    // 5. Update the reference
+    free(buffer);
     return head_update(commit_id_out);
 }
-    
